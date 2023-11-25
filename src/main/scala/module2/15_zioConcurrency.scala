@@ -25,7 +25,12 @@ object zioConcurrency {
    */
 
 
-  def printEffectRunningTime[R, E, A](zio: ZIO[R, E, A]): ZIO[Console with Clock with R, E, A] = ???
+  def printEffectRunningTime[R, E, A](zio: ZIO[R, E, A]): ZIO[Console with Clock with R, Any, A] = for {
+    start <- clock.currentTime(TimeUnit.MILLISECONDS)
+    r <- zio
+    end <- clock.currentTime(TimeUnit.MILLISECONDS)
+    _ <- putStrLn(s"Running time ${end - start}")
+  } yield r
 
 
 
