@@ -1,6 +1,11 @@
 package module2.homework
 
 
+import cats.Monad.ops.toAllMonadOps
+import cats.effect.{ExitCode, IO, IOApp}
+import cats.implicits.catsSyntaxFlatMapOps
+
+import scala.io.StdIn
 import scala.language.higherKinds
 
 object catsEffectHomework{
@@ -29,13 +34,16 @@ object catsEffectHomework{
      *
      * @return Random[F]
      */
-    def apply = ???
+    def apply[F[_]](implicit e: Random[F]): Random[F] = e
 
 
     /**
      * 2. Реализовать инстанс тайп класса для IO
      */
-    implicit val ioRandom = ???
+    implicit val ioRandom = new Random[IO] {
+      override def nextIntBetween(min: Int, max: Int): IO[Int] =
+        IO.apply(scala.util.Random.nextInt(max - min) + min)
+    }
   }
 
   /**
@@ -55,12 +63,16 @@ object catsEffectHomework{
      *
      * @return Console[F]
      */
-    def apply = ???
+    def apply[F[_]](implicit c: Console[F]): Console[F] = c
 
     /**
      * 4. Реализовать инстанс тайп класса для IO
      */
-    implicit val ioConsole = ???
+    implicit val ioConsole = new Console[IO] {
+      override def printLine(str: String): IO[Unit] = IO.apply(println(str))
+
+      override def readLine(): IO[String] = IO.apply(StdIn.readLine())
+    }
   }
 
   /**
@@ -70,7 +82,10 @@ object catsEffectHomework{
    * Подумайте, на какие наиболее простые эффекты ее можно декомпозировать.
    */
 
-    val guessProgram = ???
+    val guessProgram: IO[Unit] = Console[IO].printLine("Введите число: ") >>
+      Console[IO].readLine() >>= (number => Random[IO].nextIntBetween(1, 4) >>= (random =>
+        if (random.toString.equals(number)) Console[IO].printLine(s"Угадали ${random}")
+        else Console[IO].printLine(s"Не угадали ${random}") *> guessProgram))
 
 
 
@@ -79,7 +94,7 @@ object catsEffectHomework{
    * Подумайте над сигнатурой, еам нужно принимать эффект и условие относительно его значения, для того чтобы повторять либо заканчивать выполнение.
    */
 
-  def doWhile = ???
+  def doWhile[A](io: IO[A])(f: A => Boolean): IO[A] = io >>= (a => if (f(a)) IO.pure(a) else doWhile(io)(f))
 
 }
 
@@ -87,6 +102,7 @@ object catsEffectHomework{
  * 7. Превратите данный объект в исполняемую cats effect программу, которая будет запускать
  * guessProgram
  */
-object HomeworkApp{
-
+object HomeworkApp extends IOApp {
+  override def run(args: List[String]): IO[ExitCode] =
+    catsEffectHomework.guessProgram.as(ExitCode.Success)
 }
