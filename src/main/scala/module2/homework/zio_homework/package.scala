@@ -1,5 +1,6 @@
 package module2.homework
 
+import module2.zioConcurrency.printEffectRunningTime
 import zio.{Has, Task, ULayer, ZIO, ZLayer}
 import zio.clock.{Clock, sleep}
 import zio.console._
@@ -19,16 +20,25 @@ package object zio_homework {
    * и печатать в когнсоль угадал или нет. Подумайте, на какие наиболее простые эффекты ее можно декомпозировать.
    */
 
-
-
-  lazy val guessProgram = ???
+  lazy val guessProgram = for {
+    _ <- putStrLn("Введите число")
+    n <- getStrLn
+    rand <- nextIntBetween(1, 4)
+    result <- ZIO.succeed(rand.equals(n.toInt))
+    _ <- if (result) putStrLn("Угадано")
+         else putStrLn("Не угадано")
+  } yield result
 
   /**
    * 2. реализовать функцию doWhile (общего назначения), которая будет выполнять эффект до тех пор, пока его значение в условии не даст true
    * 
    */
 
-  def doWhile = ???
+  def doWhile[R, E, A](effect: ZIO[R, E, A])(f: A => Boolean): ZIO[R, E, A] = for {
+    result <- effect
+    _ <- if (f(result)) ZIO.unit
+         else doWhile(effect)(f)
+  } yield result
 
 
   /**
@@ -42,12 +52,15 @@ package object zio_homework {
    * 3.1 Создайте эффект, который будет возвращать случайеым образом выбранное число от 0 до 10 спустя 1 секунду
    * Используйте сервис zio Random
    */
-  lazy val eff = ???
+  lazy val eff = for {
+    _ <- sleep(1 second)
+    result <- nextIntBetween(0, 11)
+  } yield result
 
   /**
    * 3.2 Создайте коллукцию из 10 выше описанных эффектов (eff)
    */
-  lazy val effects = ???
+  lazy val effects = List.range(0, 10).map(_ => eff)
 
   
   /**
@@ -56,14 +69,14 @@ package object zio_homework {
    * можно использовать ф-цию printEffectRunningTime, которую мы разработали на занятиях
    */
 
-  lazy val app = ???
+  lazy val app = ZIO.collectAll(effects).map(_.sum)
 
 
   /**
    * 3.4 Усовершенствуйте программу 4.3 так, чтобы минимизировать время ее выполнения
    */
 
-  lazy val appSpeedUp = ???
+  lazy val appSpeedUp = ZIO.collectAllPar(effects).map(_.sum)
 
 
   /**
@@ -79,13 +92,13 @@ package object zio_homework {
      * 
      */
 
-  lazy val appWithTimeLogg = ???
+  lazy val appWithTimeLogg = printEffectRunningTime(appSpeedUp.map(_.toString) >>= (s => putStrLn(s)))
 
   /**
     * 
     * Подготовьте его к запуску и затем запустите воспользовавшись ZioHomeWorkApp
     */
 
-  lazy val runApp = ???
+  lazy val runApp = appWithTimeLogg.exitCode
 
 }
