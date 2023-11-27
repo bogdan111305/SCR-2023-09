@@ -1,24 +1,39 @@
-import cats.{Defer, Monad}
-import cats.data.Validated
-import cats.effect.{IO, Sync, SyncIO}
-import module1.implicits.{implicit_conversions, implicit_scopes}
-import module1.threads.{Thread1, ToyFuture, getRatesLocation1, getRatesLocation2, getRatesLocation3, getRatesLocation4, printRunningTime}
-import module1.validation.UserDTO
-import module1.{executor, future, hof, lazyOps, list, try_, type_system, validation}
-import module2.{toyCatsEffect, toyModel, typeClasses, zioConcurrency, zioConstructors}
-import module2.functional_effects.functionalProgram.{declarativeEncoding, executableEncoding}
-import zio.ZIO
-
-import scala.concurrent.Future
-import scala.io.StdIn
-import scala.util.Try
-
+import module1.homework.Monad.MonadOps
+import module1.homework.Show.ShowOps
 
 object Main {
 
   def main(args: Array[String]): Unit = {
     println("Hello, World!" +
       s" thread - ${Thread.currentThread().getName}" )
+
+    val integer = 1111;
+    println(integer.show)
+
+    val str = "showMonad";
+    println(str.show)
+
+    val boolean = true
+    println(boolean.show)
+
+    val list = List(1, 2, 3)
+    println(list.show)
+
+    val set = Set(1, 2, 3)
+    println(set.show)
+
+    val oo = Option.apply(Option.apply("foo"))
+    val o = oo.flatten2
+    println(o)
+
+    val ll2 = List(List("foo"))
+    val l2 = ll2.flatten2
+    println(l2)
+
+    val ss2 = Set(Set("foo"))
+    val s2 = ss2.flatten2
+    println(s2)
+
 
 //    val t1 = new Thread{
 //      override def run(): Unit ={
@@ -92,7 +107,7 @@ object Main {
 
 
 
-    zio.Runtime.default.unsafeRun(zioConcurrency.g1)
+//    zio.Runtime.default.unsafeRun(zioConcurrency.g1)
 
   }
 }
